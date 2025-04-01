@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        form label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        form input, form select, form button {
+            padding: 8px 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        form button:hover {
+            background-color: #45a049;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .error, .success {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+        .success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database Viewer</h1>
+    <form method="POST">
+        {% if not connected %}
+            <!-- Connection Form -->
+            <label for="host">Host:</label>
+            <input type="text" id="host" name="host" placeholder="127.0.0.1" required>
+            <label for="port">Port:</label>
+            <input type="text" id="port" name="port" placeholder="3306" required>
+            <label for="user">User:</label>
+            <input type="text" id="user" name="user" placeholder="root" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <label for="database">Database:</label>
+            <input type="text" id="database" name="database" required>
+            <div class="btn-group">
+                <button type="submit" name="action" value="connect">Connect</button>
+            </div>
+        {% else %}
+            <!-- Connected Actions -->
+            <div class="btn-group">
+                <button type="submit" name="action" value="disconnect">Disconnect</button>
+                <button type="submit" name="action" value="show_tables">Show Tables</button>
+                <button type="submit" name="action" value="reset">Reset Database</button>
+            </div>
+            <label for="query">Select Query:</label>
+            <select id="query" name="query">
+                {% for query_name, query_sql in predefined_queries.items() %}
+                    <option value="{{ query_name }}" {% if selected_query == query_name %}selected{% endif %}>
+                        {{ query_name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" name="action" value="execute_query">Execute Query</button>
+        {% endif %}
+    </form>
+
+    <!-- Error or Success Messages -->
+    {% if error_message %}
+        <div class="error">{{ error_message }}</div>
+    {% endif %}
+    {% if success_message %}
+        <div class="success">{{ success_message }}</div>
+    {% endif %}
+
+    <!-- Display Tables and Data -->
+    {% if data %}
+        <h2>Tables and Data:</h2>
+        {% for table in data %}
+            <h3>Table: {{ table.table_name }}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in table.columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table.rows %}
+                        <tr>
+                            {% for col in row %}
+                                <td>{{ col }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    {% else %}
+        <p class="no-data">No data to display. Use the "Show Tables" button to load table data.</p>
+    {% endif %}
+</body>
+</html>
